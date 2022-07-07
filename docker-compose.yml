@@ -1,0 +1,43 @@
+version: "3.8"
+
+services:
+  web:
+    build: ./project
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - ./project/:/usr/src/app/
+    ports:
+      - 1337:8000
+    environment:
+      - SECRET_KEY=${SECRET_KEY}
+      - DEBUG=1
+      - DJANGO_ALLOWED_HOSTS=localhost 127.0.0.1 [::1]
+      - YT_API_KEYS=${YT_API_KEYS}
+    depends_on:
+      - redis
+  redis:
+    image: redis:alpine
+  celery:
+    build: ./project
+    command: celery -A core worker -l info
+    volumes:
+      - ./project/:/usr/src/app/
+    environment:
+      - SECRET_KEY=${SECRET_KEY}
+      - DEBUG=1
+      - DJANGO_ALLOWED_HOSTS=localhost 127.0.0.1 [::1]
+      - YT_API_KEYS=${YT_API_KEYS}
+    depends_on:
+      - redis
+  celery-beat:
+    build: ./project
+    command: celery -A core beat -l info
+    volumes:
+      - ./project/:/usr/src/app/
+    environment:
+      - SECRET_KEY=${SECRET_KEY}
+      - DEBUG=1
+      - DJANGO_ALLOWED_HOSTS=localhost 127.0.0.1 [::1]
+      - YT_API_KEYS=${YT_API_KEYS}
+    depends_on:
+      - redis
